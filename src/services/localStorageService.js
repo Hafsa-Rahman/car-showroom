@@ -1,13 +1,4 @@
-const KEYS = {
-  USERS: 'udevs_users',
-  SESSION: 'udevs_session',
-  CARS: 'udevs_cars',
-  SUPPLIERS: 'udevs_suppliers',
-  CUSTOMERS: 'udevs_customers',
-  APPLICATIONS: 'udevs_applications',
-  NOTIFICATIONS: 'udevs_notifications',
-  LOGS: 'udevs_activity_logs',
-};
+import { seedUsers, seedSuppliers, seedCars } from '../data/seedData';
 
 export const localStorageService = {
   getData: (key) => {
@@ -28,13 +19,22 @@ export const localStorageService = {
     }
   },
 
-  generateId: (prefix = 'ID') => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`.toUpperCase(),
+  generateId: (prefix = 'ID') => `${prefix}-${Date.now().toString(36).toUpperCase()}`,
 
-  seedInitialData: (seeds) => {
-    Object.entries(seeds).forEach(([key, value]) => {
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, JSON.stringify(value));
-      }
-    });
+  initializeSeedData: () => {
+    // Always enforce seeding if missing or empty
+    const existingUsers = localStorage.getItem('udevs_users');
+    if (!existingUsers || JSON.parse(existingUsers).length === 0) {
+      localStorage.setItem('udevs_users', JSON.stringify(seedUsers));
+    }
+    if (!localStorage.getItem('udevs_suppliers')) {
+      localStorage.setItem('udevs_suppliers', JSON.stringify(seedSuppliers));
+    }
+    if (!localStorage.getItem('udevs_cars')) {
+      localStorage.setItem('udevs_cars', JSON.stringify(seedCars));
+    }
+    if (!localStorage.getItem('udevs_applications')) {
+      localStorage.setItem('udevs_applications', JSON.stringify([]));
+    }
   }
 };

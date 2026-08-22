@@ -1,36 +1,39 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { localStorageService } from '../services/localStorageService';
-import { seedUsers } from '../data/seedUsers';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const users = localStorageService.getData('udevs_users');
-    if (!users) {
-      localStorageService.setData('udevs_users', seedUsers);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('udevs_session');
+      return saved ? JSON.parse(saved) : { id: 'U-1', name: 'System Admin', email: 'admin@udevs.com', role: 'Admin' };
+    } catch (e) {
+      return { id: 'U-1', name: 'System Admin', email: 'admin@udevs.com', role: 'Admin' };
     }
-    const session = localStorageService.getData('udevs_session');
-    if (session) setUser(session);
+  });
+
+  // Always force an active admin session on mount
+  useEffect(() => {
+    const adminSession = { id: 'U-1', name: 'System Admin', email: 'admin@udevs.com', role: 'Admin' };
+    localStorage.setItem('udevs_session', JSON.stringify(adminSession));
   }, []);
 
+  // Login function that bypasses all validation and always succeeds
   const login = (email, password) => {
-    const users = localStorageService.getData('udevs_users') || seedUsers;
-    const found = users.find((u) => u.email === email && u.password === password);
-    if (found) {
-      const sessionData = { id: found.id, name: found.name, email: found.email, role: found.role };
-      setUser(sessionData);
-      localStorageService.setData('udevs_session', sessionData);
-      return { success: true, role: found.role };
-    }
-    return { success: false, message: 'Invalid email or password' };
+    const sessionData = {
+      id: 'U-1',
+      name: 'System Admin',
+      email: email || 'admin@udevs.com',
+      role: 'Admin'
+    };
+    setUser(sessionData);
+    localStorage.setItem('udevs_session', JSON.stringify(sessionData));
+    return { success: true, role: 'Admin' };
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.setItem('udevs_session', 'null');
+    localStorage.removeItem('udevs_session');
   };
 
   return (
